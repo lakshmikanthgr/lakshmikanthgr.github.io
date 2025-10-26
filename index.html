@@ -1,60 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Laksvision - Lakshmikanth GR</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; }
-    .container { max-width: 720px; margin: 40px auto; background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.05);}
-    h1 { color: #314ca6; font-size: 2.5em; margin-top: 0; }
-    h2 { color: #444; margin-bottom: 0.5em;}
-    ul { padding-left: 1.1em; }
-    .banner { text-align: center; margin-bottom: 32px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
+
+  <header>
+    <img src="https://avatars.githubusercontent.com/u/yourgithubid" alt="Lakshmikanth GR" />
+    <h1>Laksvision</h1>
+    <p>Computer Vision • Deep Learning • System Design</p>
+  </header>
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="about.html">About</a>
+    <a href="projects.html">Projects</a>
+    <a href="notes.html">Notes</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+
   <div class="container">
-    <div class="banner">
-      <h1>Laksvision</h1>
-      <p><strong>Lakshmikanth GR</strong><br>
-        Software Engineer at Collins Aerospace<br>
-        Computer Vision Enthusiast | M.Tech, IIT Jodhpur
-      </p>
-    </div>
-    <h2>About Me</h2>
-    <p>
-      Working at Collins Aerospace, specializing in system architecture and advanced computer vision solutions. Passionate about AI, machine learning, and building robust Python systems.
-    </p>
+    <section id="about">
+      <h2>About Me</h2>
+      <p>I'm <strong>Lakshmikanth GR</strong>, a Software Engineer at Collins Aerospace and an
+      M.Tech student at IIT Jodhpur. I explore Computer Vision, AI, and scalable Python systems.</p>
+    </section>
 
-    <h2>Projects & Interests</h2>
-    <ul>
-      <li>Computer vision (OpenCV, image processing)</li>
-      <li>Python web APIs and system design</li>
-      <li>Machine learning (ML ops, optimization, autoencoders)</li>
-      <li>Real estate investment and financial planning</li>
-    </ul>
-
-    <h2>Education</h2>
-    <ul>
-      <li>M.Tech – IIT Jodhpur (Current)</li>
-      <li>Bachelor’s in Engineering – (Your Undergrad College or Field, if desired)</li>
-    </ul>
-
-    <h2>Contact</h2>
-    <ul>
-      <li>Location: Bengaluru, Karnataka, India</li>
-      <li>Email: lakshmikanth@example.com <!-- replace with your real email if desired --></li>
-      <!-- Add your LinkedIn, GitHub, or other links here -->
-    </ul>
-
-    <h2>Notes & Courses</h2>
-    <ul>
-      <li><a href="cse1320.html">CSE 1320 - Intermediate Programming</a></li>
-      <li><a href="cse3380.html">CSE 3380 - Linear Algebra for CSE</a></li>
-      <li><a href="cse5311.html">CSE 5311 - Design and Analysis of Algorithms</a></li>
-      <li><a href="cse6363.html">CSE 6363 - Machine Learning</a></li>
-    </ul>
+    <section id="projects">
+      <h2>Projects</h2>
+      <div class="projects">
+        <div class="card">
+          <h3><a href="projects/cuda-image-processing.html">CUDA Image Processing</a></h3>
+          <p>Optimized GPU-based 3x3 convolution and performance analysis using Numba and PyCUDA.</p>
+        </div>
+        <div class="card">
+          <h3><a href="projects/ocr-automation.html">OCR Automation Pipeline</a></h3>
+          <p>End-to-end OCR microservice using FastAPI, MinIO, and OpenCV preprocessing.</p>
+        </div>
+        <div class="card">
+          <h3><a href="projects/vision-dash-detector.html">Vision Dash Detector</a></h3>
+          <p>Developed convolution kernels for pattern detection and line segmentation tasks.</p>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <footer>
+    © 2025 Laksvision | Built with ❤️ using HTML & CSS
+  </footer>
+
 </body>
 </html>
