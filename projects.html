@@ -3,7 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <title>Projects - Laksvision</title>
-  <base href="/lakshmikanthgr.github.io/">
+  <script>
+    (function(){
+      var repoName = 'lakshmikanthgr.github.io';
+      var path = location.pathname;
+      var idx = path.indexOf('/' + repoName + '/');
+      var base = document.createElement('base');
+      if(idx !== -1){
+        base.href = '/' + repoName + '/';
+      } else {
+        base.href = '/';
+      }
+      document.head.appendChild(base);
+    })();
+  </script>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
