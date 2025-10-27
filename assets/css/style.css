@@ -20,7 +20,7 @@ body {
 
 /* Top navigation (dark translucent to match site) */
 nav {
-  background: rgba(6,10,18,0.5); /* dark translucent strip instead of white */
+  background: rgba(68, 75, 90, 0.5); /* dark translucent strip instead of white */
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   text-align: center;
@@ -112,6 +112,15 @@ h2 {
 }
 .card:hover{ transform: translateY(-8px) scale(1.02); box-shadow: 0 28px 60px rgba(3,8,20,0.7); border-color: rgba(255,255,255,0.07); }
 
+.card h3 a {
+color: var(--accent); /* or any hex like #ffd57a /
+text-decoration: none; / optional /
+}
+.card h3 a:hover {
+color: var(--primary); / hover color /
+text-decoration: underline; / optional */
+}
+
 footer {
   text-align: center;
   padding: 34px 10px;
@@ -139,4 +148,17 @@ footer {
   --muted: #9aa6bf;
   --card: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   --glass: rgba(255,255,255,0.03);
+}
+
+/* Project headings and notes list links */
+.card h3 a,
+.container ul li a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
+.card h3 a:hover,
+.container ul li a:hover {
+  color: var(--primary);
+  text-decoration: underline;
 }
