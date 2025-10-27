@@ -30,29 +30,9 @@
     tick();
   }
 
-  // Theme toggle
-  const toggle = document.getElementById('theme-toggle');
+  // Site is dark-only. The HTML root is set with `data-theme="dark"` by default.
+  // No runtime theme switching to keep a simple, consistent look.
   const root = document.documentElement;
-  function setTheme(t){
-    if(t === 'dark'){
-      root.setAttribute('data-theme','dark');
-      if(toggle) toggle.textContent = '☀️';
-      localStorage.setItem('theme','dark');
-    } else {
-      root.removeAttribute('data-theme');
-      if(toggle) toggle.textContent = '🌙';
-      localStorage.setItem('theme','light');
-    }
-  }
-  // Initialize
-  const saved = localStorage.getItem('theme');
-  if(saved === 'dark') setTheme('dark'); else setTheme('light');
-  if(toggle){
-    toggle.addEventListener('click', ()=>{
-      const now = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      setTheme(now);
-    });
-  }
 
   // Smooth scroll for anchors
   document.addEventListener('click', function(e){
