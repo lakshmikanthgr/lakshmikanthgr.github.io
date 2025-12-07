@@ -18,26 +18,26 @@ python3 -m http.server 8000
 
 If you want the theme toggle back or different avatar, edit the HTML files in the repo root and `assets/js/main.js`.
 
-## Run with Docker
+Cleanup guidance
 
-You can build and run the site in a container (nginx) so it behaves like a real webserver.
-
-Build and run with Docker only:
+Before committing a cleanup (recommended):
 
 ```bash
-# from the repository root
-docker build -t lakshmikanth-site:latest .
-docker run --rm -p 8000:80 lakshmikanth-site:latest
-# then open http://localhost:8000 in your browser
+# remove generated site from the repo cache if it exists
+git rm -r --cached _site || true
+# remove local jekyll cache
+rm -rf .jekyll-cache
+# commit .gitignore that excludes generated files
+git add .gitignore
+git commit -m "Ignore generated files and local caches"
 ```
 
-Or with Docker Compose (recommended for repeated local dev):
+To fully remove the Docker files I added earlier (optional):
 
 ```bash
-docker-compose up --build -d
-# then open http://localhost:8000
+git rm Dockerfile docker-compose.yml .dockerignore || true
+git commit -m "Remove docker artifacts"
 ```
 
-Notes
-- The image serves the compiled static files from the repository root. Make sure all site files are committed or present in the working directory before building.
-- If you still see missing CSS/JS on GitHub Pages, wait a minute after pushing or clear cached service worker / cache in your browser.
+After this your repository will contain only source files needed for GitHub Pages (layouts, assets, markdown, and config). 
+

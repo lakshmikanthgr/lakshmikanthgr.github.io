@@ -1,0 +1,17 @@
+# Ignore Jekyll build artifacts and editor temp files
+_site/
+.jekyll-cache/
+.bundle/
+.DS_Store
+
+# Ignore local Docker build artifacts
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# node / python artifacts
+node_modules/
+*.log
+
+# OS files
+Thumbs.db

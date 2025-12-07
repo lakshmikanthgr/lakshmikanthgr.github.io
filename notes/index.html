@@ -6,9 +6,10 @@ permalink: /notes/
 
 <h2>Notes & Courses</h2>
 <ul>
-  {% raw %}{% for note in site.notes %}{% endraw %}
-    <li><a href="{% raw %}{{ note.url | relative_url }}{% endraw %}">{% raw %}{{ note.title }}{% endraw %}</a>
-      <small> — {% raw %}{{ note.date | date: "%Y-%m-%d" }}{% endraw %}</small>
+  {% for note in site.notes %}
+    <li>
+      <a href="{{ note.url | relative_url }}">{{ note.title }}</a>
+      <small> — {{ note.date | date: "%Y-%m-%d" }}</small>
     </li>
-  {% raw %}{% endfor %}{% endraw %}
+  {% endfor %}
 </ul>
