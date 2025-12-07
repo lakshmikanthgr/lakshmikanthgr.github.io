@@ -14,36 +14,6 @@
   </header>
 
   <nav>
-    <a href="{{ '/' | relative_url }}" {% raw %}{% if page.url == '/' %}class="active"{% endif %}{% endraw %}>Home</a>
-    <a href="{{ '/about.html' | relative_url }}">About</a>
-    <a href="{{ '/projects.html' | relative_url }}">Projects</a>
-    <a href="{{ '/notes/' | relative_url }}">Notes</a>
-    <a href="{{ '/contact.html' | relative_url }}">Contact</a>
-  </nav>
-
-  <div class="container">
-    {{ content }}
-  </div>
-
-  <footer>© 2025 Lakshmikanth G R | Built with ❤️ using HTML &amp; CSS</footer>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="utf-8" />
-  <title>{{ page.title }} — {{ site.title }}</title>
-  <base href="{{ site.baseurl | default: '/' }}" />
-  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}" />
-</head>
-<body>
-  <header>
-    <img src="{{ '/assets/images/star_bucks_chicago.jpg' | relative_url }}" alt="Lakshmikanth GR" />
-    <h1>Lakshmikanth G R</h1>
-    <p>Computer Vision • Deep Learning • System Design</p>
-  </header>
-
-  <nav>
     <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Home</a>
     <a href="{{ '/about.html' | relative_url }}">About</a>
     <a href="{{ '/projects.html' | relative_url }}">Projects</a>
