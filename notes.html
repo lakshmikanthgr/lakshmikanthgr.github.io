@@ -1,51 +1,14 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <title>Notes - Laksvision</title>
-  <script>
-    (function(){
-      var repoName = 'lakshmikanthgr.github.io';
-      var path = location.pathname;
-      var idx = path.indexOf('/' + repoName + '/');
-      var base = document.createElement('base');
-      if(idx !== -1){
-        base.href = '/' + repoName + '/';
-      } else {
-        base.href = '/';
-      }
-      document.head.appendChild(base);
-    })();
-  </script>
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
+---
+layout: default
+title: Notes
+permalink: /notes/
+---
 
-  <header>
-    <img src="assets/images/star_bucks_chicago.jpg" alt="Lakshmikanth GR" />
-    <h1>Lakshmikanth G R</h1>
-    <p>Computer Vision • Deep Learning • System Design</p>
-  </header>
-  <nav>
-    <a href="index.html" class="active">Home</a>
-    <a href="about.html">About</a>
-    <a href="projects.html">Projects</a>
-    <a href="notes.html">Notes</a>
-    <a href="contact.html">Contact</a>
-  </nav>
-
-  <div class="container">
-    <h2>Notes & Courses</h2>
-    <ul>
-      <li><a href="notes/deep-learning/cnn-fundamentals.html">CNN Fundamentals</a></li>
-      <li><a href="notes/computer-vision/feature-detection.html">Feature Detection</a></li>
-      <li><a href="notes/system-design/scaling-apis.html">Scaling APIs</a></li>
-    </ul>
-  </div>
-
-  <footer>
-    © 2025 Lakshmikanth G R | Built with ❤️ using HTML & CSS
-  </footer>
-
-</body>
-</html>
+<h2>Notes & Courses</h2>
+<ul>
+  {% for note in site.notes %}
+    <li><a href="{{ note.url | relative_url }}">{{ note.title }}</a>
+        <small> — {{ note.date | date: "%Y-%m-%d" }}</small>
+    </li>
+  {% endfor %}
+</ul>

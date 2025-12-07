@@ -1,0 +1,18 @@
+title: Laksvision
+description: Computer Vision • Deep Learning • System Design
+baseurl: ""
+url: "https://lakshmikanthgr.github.io"
+collections:
+  notes:
+    output: true
+    permalink: /notes/:path/
+markdown: kramdown
+title: Laksvision
+description: Computer Vision • Deep Learning • System Design
+baseurl: ""          # empty for user site (username.github.io)
+url: "https://lakshmikanthgr.github.io"
+collections:
+  notes:
+    output: true
+    permalink: /notes/:path/
+markdown: kramdown
