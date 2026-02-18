@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU Architecture Explorer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;500;700&display=swap');
+
+  :root {
+    --bg: #050a0f;
+    --panel: #0a1520;
+    --border: #1a3a5c;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --accent4: #c97bff;
+    --text: #c8dff0;
+    --dim: #4a6a8a;
+    --sm-color: #1a3a6c;
+    --sm-border: #2a6adc;
+    --warp-color: #0a2a1a;
+    --warp-border: #00c853;
+    --l1-color: #2a1a0a;
+    --l1-border: #ff8c00;
+    --l2-color: #1a0a2a;
+    --l2-border: #9c27b0;
+    --dram-color: #1a0a0a;
+    --dram-border: #f44336;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .starfield {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,80,160,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(0,200,255,0.04) 0%, transparent 50%);
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 1400px; margin: 0 auto; padding: 20px;
+  }
+
+  header {
+    text-align: center; padding: 30px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem; font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 30px rgba(0,212,255,0.5);
+  }
+
+  header p {
+    color: var(--dim); font-size: 0.75rem; margin-top: 6px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+
+  .gpu-wrapper {
+    background: linear-gradient(135deg, #0a1a30 0%, #050d1a 100%);
+    border: 2px solid var(--sm-border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 0 40px rgba(42,106,220,0.2), inset 0 0 60px rgba(0,0,0,0.5);
+  }
+
+  .gpu-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--sm-border);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .gpu-label::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--sm-border);
+    opacity: 0.4;
+  }
+
+  /* SM Grid */
+  .sm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .sm {
+    background: var(--sm-color);
+    border: 1.5px solid var(--sm-border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sm:focus {
+    outline: 2px solid rgba(0,212,255,0.18);
+    outline-offset: 2px;
+  }
+
+  .sm::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .sm:hover, .sm.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(0,212,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .sm:hover::before, .sm.active::before { opacity: 1; }
+
+  .sm-title {
+    font-size: 0.6rem; font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+  }
+
+  /* Warps inside SM */
+  .warp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    margin-bottom: 6px;
+  }
+
+  .warp {
+    background: var(--warp-color);
+    border: 1px solid var(--warp-border);
+    border-radius: 3px;
+    height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.45rem;
+    color: var(--warp-border);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .warp.active-warp {
+    background: rgba(0,200,83,0.2);
+    box-shadow: 0 0 4px rgba(0,200,83,0.4);
+  }
+
+  .warp-pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { background: var(--warp-color); }
+    50% { background: rgba(0,200,83,0.25); box-shadow: 0 0 6px rgba(0,200,83,0.5); }
+  }
+
+  /* Cache inside SM */
+  .sm-caches {
+    display: flex; gap: 4px; margin-top: 4px;
+  }
+
+  .cache-block {
+    flex: 1;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 0.45rem;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .l1 { background: rgba(255,140,0,0.15); border: 1px solid var(--l1-border); color: var(--l1-border); }
+  .shared-mem { background: rgba(0,212,255,0.1); border: 1px solid var(--accent); color: var(--accent); }
+
+  /* L2 Cache */
+  .l2-bar {
+    background: rgba(156,39,176,0.15);
+    border: 1.5px solid var(--l2-border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .l2-label {
+    font-size: 0.65rem; font-weight: 700;
+    color: var(--l2-border);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+
+  .l2-segments {
+    display: flex; flex: 1; gap: 3px;
+  }
+
+  .l2-seg {
+    flex: 1; height: 20px;
+    background: rgba(156,39,176,0.2);
+    border-radius: 2px;
+    border: 1px solid rgba(156,39,176,0.4);
+    transition: all 0.3s;
+  }
+
+  .l2-seg.lit {
+    background: rgba(156,39,176,0.5);
+    border-color: var(--l2-border);
+    box-shadow: 0 0 6px rgba(156,39,176,0.4);
+  }
+
+  .l2-info { font-size: 0.55rem; color: var(--dim); white-space: nowrap; }
+
+  /* DRAM */
+  .dram {
+    background: rgba(244,67,54,0.08);
+    border: 1.5px solid var(--dram-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .dram-label {
+    font-size: 0.65rem; font-weight: 700;
+    color: var(--dram-border);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+
+  .dram-banks {
+    display: flex; flex: 1; gap: 4px; flex-wrap: wrap;
+  }
+
+  .dram-bank {
+    flex: 1; min-width: 30px; height: 28px;
+    background: rgba(244,67,54,0.1);
+    border: 1px solid rgba(244,67,54,0.3);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.4rem; color: var(--dram-border);
+    transition: all 0.3s;
+  }
+
+  .dram-bank.active {
+    background: rgba(244,67,54,0.25);
+    border-color: var(--dram-border);
+    box-shadow: 0 0 8px rgba(244,67,54,0.3);
+  }
+
+  /* Info Panel */
+  .info-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .info-tabs {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    background: transparent;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tab:focus {
+    outline: 2px solid rgba(0,212,255,0.12);
+    outline-offset: 2px;
+  }
+
+  .tab:hover { color: var(--text); border-color: var(--accent); }
+  .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .info-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .info-content.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .info-content h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .info-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .info-card h4 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .info-card p {
+    font-size: 0.7rem;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  .stat {
+    display: flex; justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.65rem;
+  }
+
+  .stat-val { color: var(--accent); font-weight: 600; }
+
+  /* Flow arrows animation */
+  .flow-indicator {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; margin: 6px 0;
+    font-size: 0.55rem; color: var(--dim);
+  }
+
+  .arrow { animation: flow 2s infinite; display: inline-block; }
+  .arrow:nth-child(2) { animation-delay: 0.3s; }
+  .arrow:nth-child(3) { animation-delay: 0.6s; }
+
+  @keyframes flow {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; color: var(--accent); }
+  }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-top: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 0.6rem;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="starfield"></div>
+<div class="container">
+  <header>
+    <h1>GPU ARCHITECTURE EXPLORER</h1>
+    <p>Click any component to learn more · NVIDIA-style architecture</p>
+  </header>
+
+  <div class="gpu-wrapper">
+    <div class="gpu-label">GPU DIE — 16 Streaming Multiprocessors (SM)</div>
+
+    <!-- SM Grid -->
+    <div class="sm-grid" id="smGrid"></div>
+
+    <!-- Flow arrows -->
+    <div class="flow-indicator">
+      <span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span>
+      <span style="margin: 0 8px;">Memory Hierarchy</span>
+      <span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span>
+    </div>
+
+    <!-- L2 Cache -->
+    <div class="l2-bar" id="l2Bar" data-tab="l2" tabindex="0">
+      <div class="l2-label">L2 CACHE<br><span style="font-size:0.5rem;opacity:0.7">6MB UNIFIED</span></div>
+      <div class="l2-segments" id="l2Segs"></div>
+      <div class="l2-info">Shared across<br>all SMs</div>
+    </div>
+
+    <!-- Flow arrows -->
+    <div class="flow-indicator">
+      <span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span>
+      <span style="margin: 0 8px;">Memory Bus — 384-bit</span>
+      <span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span>
+    </div>
+
+    <!-- DRAM -->
+    <div class="dram" id="dramBar" data-tab="dram" tabindex="0">
+      <div class="dram-label">GDDR6X / HBM<br><span style="font-size:0.5rem;opacity:0.7">VRAM — 80GB</span></div>
+      <div class="dram-banks" id="dramBanks"></div>
+      <div class="l2-info" style="color:#ef9a9a">Global<br>Memory</div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2a6adc"></div> SM</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00c853"></div> Warp (32 threads)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff8c00"></div> L1 Cache + Shared Mem</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9c27b0"></div> L2 Cache</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f44336"></div> GDDR6X / HBM VRAM</div>
+    </div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="info-panel">
+    <div class="info-tabs" role="tablist">
+      <button class="tab active" data-tab="overview" role="tab" aria-selected="true" aria-controls="tab-overview">Overview</button>
+      <button class="tab" data-tab="sm" role="tab" aria-selected="false" aria-controls="tab-sm">SM</button>
+      <button class="tab" data-tab="warp" role="tab" aria-selected="false" aria-controls="tab-warp">Warps</button>
+      <button class="tab" data-tab="l1" role="tab" aria-selected="false" aria-controls="tab-l1">L1 + Shared</button>
+      <button class="tab" data-tab="l2" role="tab" aria-selected="false" aria-controls="tab-l2">L2 Cache</button>
+      <button class="tab" data-tab="dram" role="tab" aria-selected="false" aria-controls="tab-dram">VRAM</button>
+      <button class="tab" data-tab="hierarchy" role="tab" aria-selected="false" aria-controls="tab-hierarchy">Full Hierarchy</button>
+    </div>
+
+    <div class="info-content active" id="tab-overview" role="tabpanel" aria-labelledby="tab-overview" >
+      <h3 style="color:var(--accent)">GPU Architecture at a Glance</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--sm-border)">Streaming Multiprocessor (SM)</h4>
+          <p>The basic compute unit of a GPU. Each SM contains CUDA cores, warp schedulers, registers, and L1 cache. A modern GPU has 10–170 SMs.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--warp-border)">Warps & Threads</h4>
+          <p>A warp = 32 threads executing in lockstep (SIMT). Each SM runs up to 64 warps concurrently (2048 threads). Warp schedulers hide memory latency.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--l1-border)">L1 / Shared Memory</h4>
+          <p>Per-SM fast scratchpad. L1 caches global memory reads. Shared memory is explicitly managed by the programmer — very low latency (~5 cycles).</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--l2-border)">L2 Cache</h4>
+          <p>Unified cache shared across all SMs. Sits between SMs and VRAM. Typically 4–96 MB depending on GPU generation. ~200 cycle latency.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--dram-border)">Global Memory (VRAM)</h4>
+          <p>GDDR6X or HBM. Huge capacity (8–80GB), high bandwidth (up to 3.2 TB/s with HBM3), but high latency (~600–800 cycles). All SMs share it.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--accent4)">Why This Matters</h4>
+          <p>The memory hierarchy is the key to GPU performance. Keeping data in shared memory / L1 is 100× faster than hitting VRAM. Warps hide latency by switching context.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-sm" role="tabpanel" aria-labelledby="tab-sm" hidden>
+      <h3 style="color:var(--sm-border)">Streaming Multiprocessor (SM)</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--sm-border)">What's Inside an SM?</h4>
+          <div class="stat"><span>CUDA Cores (FP32)</span><span class="stat-val">128</span></div>
+          <div class="stat"><span>INT32 Cores</span><span class="stat-val">64</span></div>
+          <div class="stat"><span>Tensor Cores</span><span class="stat-val">4</span></div>
+          <div class="stat"><span>Warp Schedulers</span><span class="stat-val">4</span></div>
+          <div class="stat"><span>Dispatch Units</span><span class="stat-val">8</span></div>
+          <div class="stat"><span>Register File</span><span class="stat-val">256 KB</span></div>
+          <div class="stat"><span>Max Warps</span><span class="stat-val">64</span></div>
+          <div class="stat"><span>Max Threads</span><span class="stat-val">2048</span></div>
+          <div class="stat"><span>Max Thread Blocks</span><span class="stat-val">32</span></div>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--sm-border)">Thread Blocks / CTAs</h4>
+          <p>Thread Blocks (Cooperative Thread Arrays) are groups of threads dispatched to a single SM. The SM runs multiple blocks concurrently as long as resources permit (registers, shared memory, warps).</p>
+          <br>
+          <p>Example: A block of 256 threads = 8 warps. One SM can hold up to 32 blocks and 64 warps simultaneously.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--sm-border)">GPU Example (A100)</h4>
+          <div class="stat"><span>SMs</span><span class="stat-val">108</span></div>
+          <div class="stat"><span>CUDA Cores total</span><span class="stat-val">6912</span></div>
+          <div class="stat"><span>Max Threads (GPU)</span><span class="stat-val">221,184</span></div>
+          <div class="stat"><span>L1 per SM</span><span class="stat-val">192 KB</span></div>
+          <div class="stat"><span>L2 total</span><span class="stat-val">40 MB</span></div>
+          <div class="stat"><span>HBM2e bandwidth</span><span class="stat-val">2 TB/s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-warp" role="tabpanel" aria-labelledby="tab-warp" hidden>
+      <h3 style="color:var(--warp-border)">Warps — The Execution Unit</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--warp-border)">What Is a Warp?</h4>
+          <p>A warp is a group of <strong style="color:var(--accent)">32 threads</strong> that execute the same instruction simultaneously (SIMT — Single Instruction Multiple Threads). All 32 threads in a warp are always at the same program counter.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--warp-border)">Warp Scheduling</h4>
+          <p>Each SM has 4 warp schedulers. When a warp stalls (e.g., waiting for memory), the scheduler instantly switches to another ready warp — zero overhead. This is how GPUs hide memory latency!</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--warp-border)">Numbers</h4>
+          <div class="stat"><span>Threads per warp</span><span class="stat-val">32</span></div>
+          <div class="stat"><span>Max warps per SM</span><span class="stat-val">64</span></div>
+          <div class="stat"><span>Max threads per SM</span><span class="stat-val">2048</span></div>
+          <div class="stat"><span>Max warps on A100</span><span class="stat-val">6,912</span></div>
+          <div class="stat"><span>Warp schedulers/SM</span><span class="stat-val">4</span></div>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--accent2)">Warp Divergence ⚠️</h4>
+          <p>If threads in a warp take different branches (if/else), the warp serializes both paths — half the threads idle during each path. Avoid divergence for peak performance.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-l1" role="tabpanel" aria-labelledby="tab-l1" hidden>
+      <h3 style="color:var(--l1-border)">L1 Cache + Shared Memory</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--l1-border)">L1 Cache</h4>
+          <p>Automatically managed cache for global memory accesses. Sits inside each SM. Latency ~20–30 cycles. Size: 32–192 KB per SM (configurable on recent GPUs).</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--accent)">Shared Memory</h4>
+          <p>Programmer-controlled scratchpad. Shared between all threads in a block within an SM. Extremely fast (~5 cycles). Used for tile-based algorithms (matrix multiply, etc.).</p>
+          <br>
+          <div class="stat"><span>L1 + Shared pool</span><span class="stat-val">128–256 KB</span></div>
+          <div class="stat"><span>Configurable split</span><span class="stat-val">✓</span></div>
+          <div class="stat"><span>Latency</span><span class="stat-val">~5 cycles</span></div>
+          <div class="stat"><span>Bandwidth</span><span class="stat-val">~19 TB/s/SM</span></div>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--accent3)">Bank Conflicts</h4>
+          <p>Shared memory is divided into 32 banks. If multiple threads in a warp access the same bank (different addresses), accesses serialize — this is a bank conflict. Design your memory access pattern to avoid it.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-l2" role="tabpanel" aria-labelledby="tab-l2" hidden>
+      <h3 style="color:var(--l2-border)">L2 Cache</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--l2-border)">Role of L2</h4>
+          <p>L2 is a unified cache shared across all SMs. It acts as a buffer between the SM-local L1 caches and the global VRAM. Cache misses from all SMs go here first before hitting DRAM.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--l2-border)">Stats</h4>
+          <div class="stat"><span>V100</span><span class="stat-val">6 MB</span></div>
+          <div class="stat"><span>A100</span><span class="stat-val">40 MB</span></div>
+          <div class="stat"><span>H100</span><span class="stat-val">50 MB</span></div>
+          <div class="stat"><span>RTX 4090</span><span class="stat-val">72 MB</span></div>
+          <div class="stat"><span>Latency</span><span class="stat-val">~200 cycles</span></div>
+          <div class="stat"><span>Line size</span><span class="stat-val">128 bytes</span></div>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--l2-border)">L2 Residency Hints</h4>
+          <p>Modern CUDA allows setting data residency hints: normal, streaming (likely evicted), persisting (pin in L2). Pinning frequently-reused data in L2 can dramatically speed up memory-bound kernels.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-dram" role="tabpanel" aria-labelledby="tab-dram" hidden>
+      <h3 style="color:var(--dram-border)">VRAM — Global Memory</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 style="color:var(--dram-border)">GDDR6X vs HBM</h4>
+          <p><strong style="color:var(--accent)">GDDR6X</strong>: Consumer GPUs (RTX 4090). Up to ~1 TB/s. Lower cost, lower power efficiency.</p>
+          <br>
+          <p><strong style="color:var(--accent)">HBM3e</strong>: Data center (H100, MI300X). Up to 3.2–5.3 TB/s. Stacked on interposer near GPU die. Much wider bus.</p>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--dram-border)">Key Stats</h4>
+          <div class="stat"><span>RTX 4090 capacity</span><span class="stat-val">24 GB GDDR6X</span></div>
+          <div class="stat"><span>RTX 4090 bandwidth</span><span class="stat-val">1 TB/s</span></div>
+          <div class="stat"><span>H100 capacity</span><span class="stat-val">80 GB HBM3</span></div>
+          <div class="stat"><span>H100 bandwidth</span><span class="stat-val">3.35 TB/s</span></div>
+          <div class="stat"><span>MI300X capacity</span><span class="stat-val">192 GB HBM3e</span></div>
+          <div class="stat"><span>Latency</span><span class="stat-val">~600–800 cycles</span></div>
+          <div class="stat"><span>Bus width</span><span class="stat-val">384–5120 bit</span></div>
+        </div>
+        <div class="info-card">
+          <h4 style="color:var(--accent2)">Memory Coalescing</h4>
+          <p>When 32 threads in a warp access memory, the GPU coalesces them into as few transactions as possible. Sequential access by threads = 1 transaction. Strided/random = 32 transactions. Always aim for coalesced access!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-content" id="tab-hierarchy" role="tabpanel" aria-labelledby="tab-hierarchy" hidden>
+      <h3 style="color:var(--accent4)">Full Memory Hierarchy</h3>
+      <div class="info-grid">
+        <div class="info-card" style="grid-column: 1/-1">
+          <table style="width:100%; border-collapse:collapse; font-size:0.65rem">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:6px;color:var(--accent)">Level</th>
+                <th style="padding:6px;color:var(--accent)">Scope</th>
+                <th style="padding:6px;color:var(--accent)">Size</th>
+                <th style="padding:6px;color:var(--accent)">Latency</th>
+                <th style="padding:6px;color:var(--accent)">Bandwidth</th>
+                <th style="text-align:left;padding:6px;color:var(--accent)">Managed by</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:6px;color:var(--accent3)">Registers</td>
+                <td style="padding:6px;text-align:center;color:var(--dim)">Thread</td>
+                <td style="padding:6px;text-align:center">~256 KB/SM</td>
+                <td style="padding:6px;text-align:center;color:var(--accent3)">1 cycle</td>
+                <td style="padding:6px;text-align:center">~100+ TB/s</td>
+                <td style="padding:6px">Compiler</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:6px;color:var(--accent)">Shared Memory</td>
+                <td style="padding:6px;text-align:center;color:var(--dim)">Block (SM)</td>
+                <td style="padding:6px;text-align:center">~100 KB/SM</td>
+                <td style="padding:6px;text-align:center;color:var(--accent3)">~5 cycles</td>
+                <td style="padding:6px;text-align:center">~19 TB/s</td>
+                <td style="padding:6px">Programmer</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:6px;color:var(--l1-border)">L1 Cache</td>
+                <td style="padding:6px;text-align:center;color:var(--dim)">SM</td>
+                <td style="padding:6px;text-align:center">32–192 KB</td>
+                <td style="padding:6px;text-align:center;color:var(--accent2)">~30 cycles</td>
+                <td style="padding:6px;text-align:center">~19 TB/s</td>
+                <td style="padding:6px">Hardware</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                <td style="padding:6px;color:var(--l2-border)">L2 Cache</td>
+                <td style="padding:6px;text-align:center;color:var(--dim)">GPU</td>
+                <td style="padding:6px;text-align:center">6–72 MB</td>
+                <td style="padding:6px;text-align:center;color:var(--accent2)">~200 cycles</td>
+                <td style="padding:6px;text-align:center">~7 TB/s</td>
+                <td style="padding:6px">Hardware</td>
+              </tr>
+              <tr>
+                <td style="padding:6px;color:var(--dram-border)">VRAM (DRAM)</td>
+                <td style="padding:6px;text-align:center;color:var(--dim)">GPU</td>
+                <td style="padding:6px;text-align:center">8–192 GB</td>
+                <td style="padding:6px;text-align:center;color:#f44336">~700 cycles</td>
+                <td style="padding:6px;text-align:center">1–5.3 TB/s</td>
+                <td style="padding:6px">Runtime / CPU</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top:12px;font-size:0.65rem;color:var(--dim)">Key insight: As you go down the hierarchy, latency increases ~10×–100× at each level. The goal of GPU programming is to keep data as high in the hierarchy as possible. Warps hide DRAM latency through context switching.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Build SM grid (buttons for keyboard accessibility)
+const smGrid = document.getElementById('smGrid');
+for (let i = 0; i < 16; i++) {
+  const sm = document.createElement('button');
+  sm.className = 'sm';
+  sm.type = 'button';
+  sm.id = `sm-${i}`;
+  sm.setAttribute('aria-label', `Streaming Multiprocessor ${i}`);
+
+  let warps = '';
+  for (let w = 0; w < 16; w++) {
+    const isActive = Math.random() > 0.35;
+    warps += `<div class="warp ${isActive ? 'active-warp' : ''}" style="animation-delay:${Math.random()*2}s">${w < 10 ? 'W0'+w : 'W'+w}</div>`;
+  }
+
+  sm.innerHTML = `
+    <div class="sm-title"><span>SM ${i}</span><span class="sm-index">#${i.toString().padStart(2,'0')}</span></div>
+    <div class="sm-sub">16 warps shown / 64 max</div>
+    <div class="warp-grid">${warps}</div>
+    <div class="sm-caches">
+      <div class="cache-block l1">L1 128KB</div>
+      <div class="cache-block shared-mem">SHMEM 96KB</div>
+    </div>
+  `;
+
+  sm.addEventListener('click', () => {
+    document.querySelectorAll('.sm').forEach(s => s.classList.remove('active'));
+    sm.classList.add('active');
+    showTab('sm');
+  });
+
+  sm.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sm.click(); }
+  });
+
+  smGrid.appendChild(sm);
+}
+
+// Build L2 segments
+const l2Segs = document.getElementById('l2Segs');
+for (let i = 0; i < 24; i++) {
+  const seg = document.createElement('div');
+  seg.className = 'l2-seg ' + (Math.random() > 0.4 ? 'lit' : '');
+  l2Segs.appendChild(seg);
+}
+
+// Build DRAM banks
+const dramBanks = document.getElementById('dramBanks');
+for (let i = 0; i < 12; i++) {
+  const bank = document.createElement('div');
+  bank.className = 'dram-bank ' + (Math.random() > 0.5 ? 'active' : '');
+  bank.textContent = `B${i}`;
+  dramBanks.appendChild(bank);
+}
+
+// Throttled animation using requestAnimationFrame for better performance
+let lastTick = 0;
+function animate(ts) {
+  if (ts - lastTick > 600) {
+    document.querySelectorAll('.warp').forEach(w => {
+      if (Math.random() > 0.87) w.classList.toggle('active-warp');
+    });
+    document.querySelectorAll('.l2-seg').forEach(s => {
+      if (Math.random() > 0.82) s.classList.toggle('lit');
+    });
+    document.querySelectorAll('.dram-bank').forEach(b => {
+      if (Math.random() > 0.75) b.classList.toggle('active');
+    });
+    lastTick = ts;
+  }
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+// Tab switching
+function showTab(id) {
+  // hide all panels
+  document.querySelectorAll('.info-content').forEach(c => { c.classList.remove('active'); c.setAttribute('hidden',''); });
+  // deactivate all tabs
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+
+  const content = document.getElementById('tab-' + id);
+  if (content) { content.classList.add('active'); content.removeAttribute('hidden'); }
+
+  const tab = document.querySelector(`.tab[data-tab="${id}"]`);
+  if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected','true'); }
+}
+
+window.showTab = showTab;
+
+// wire up elements with data-tab (L2 bar, DRAM, and tabs)
+document.querySelectorAll('[data-tab]').forEach(el => {
+  el.addEventListener('click', (e) => {
+    const id = el.dataset.tab;
+    if (id) showTab(id);
+  });
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const id = el.dataset.tab; if (id) showTab(id); }
+  });
+});
+</script>
+</body>
+</html>
